@@ -1,4 +1,4 @@
-Họ và tên : Lý Quôc Hùng,
+Họ và tên : Lý Quốc Hùng,
 
 MSSV: B2105544,
 

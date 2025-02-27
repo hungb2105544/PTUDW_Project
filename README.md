@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 Họ và tên : Lý Quốc Hùng,
+=======
+Họ và tên : Lý Quôc Hùng,
+>>>>>>> f2b09d6508e967f1c7f69c0d3ca9d3562d319bb9
 
 MSSV: B2105544,
 

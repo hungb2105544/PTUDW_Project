@@ -42,5 +42,8 @@ router.route("/register").post(employeeController.register);
 // Quản lý nhà xuất bản
 router.route("/publisher").get(publisherController.getAllPublishers);
 router.route("/publisher/add").post(publisherController.addPublisher);
+router.route("/publisher/:id").put(publisherController.updatePublisher);
+router.route("/publisher/:id").delete(publisherController.deletePublisher);
+router.route("/publisher").delete(publisherController.deleteAllPublishers);
 
 module.exports = router;

@@ -1,13 +1,17 @@
 <template>
   <div class="container mt-5 dashboard">
-    <h2 class="text-center mb-4 title">Dashboard Quản lý</h2>
+    <h2 class="text-center mb-4 title">Dashboard Quản Lý</h2>
 
-    <!-- Thêm nhà xuất bản -->
+    <!-- Quản lý nhà xuất bản -->
     <div class="card mb-4 shadow-sm">
-      <div class="card-header bg-primary text-white">Thêm Nhà Xuất Bản</div>
+      <div class="card-header bg-primary text-white">Quản Lý Nhà Xuất Bản</div>
       <div class="card-body">
-        <form @submit.prevent="addPublisher" class="row g-3 align-items-center">
+        <form
+          @submit.prevent="savePublisher"
+          class="row g-3 align-items-center mb-4"
+        >
           <div class="col-md-5">
+            <label class="form-label">Tên NXB</label>
             <input
               v-model="publisher.tenNXB"
               class="form-control rounded-pill"
@@ -16,6 +20,7 @@
             />
           </div>
           <div class="col-md-5">
+            <label class="form-label">Địa chỉ</label>
             <input
               v-model="publisher.diaChi"
               class="form-control rounded-pill"
@@ -29,6 +34,99 @@
             </button>
           </div>
         </form>
+
+        <table class="table table-striped table-hover custom-table">
+          <thead class="table-dark">
+            <tr>
+              <th>Tên NXB</th>
+              <th>Địa Chỉ</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="publisher in publishers" :key="publisher._id">
+              <td>{{ publisher.tenNXB }}</td>
+              <td>{{ publisher.diaChi }}</td>
+              <td>
+                <button
+                  class="btn btn-warning btn-sm me-2"
+                  @click="editPublisher(publisher)"
+                >
+                  Sửa
+                </button>
+                <button
+                  class="btn btn-danger btn-sm"
+                  @click="deletePublisher(publisher._id)"
+                >
+                  Xóa
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <button
+          class="btn btn-danger btn-custom mt-3"
+          @click="deleteAllPublishers"
+        >
+          Xóa Toàn Bộ
+        </button>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="editPublisherModal"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">Cập nhật Nhà Xuất Bản</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="mb-3">
+                <label class="form-label">Tên NXB</label>
+                <input
+                  v-model="editPublisherData.tenNXB"
+                  class="form-control rounded-pill"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Địa chỉ</label>
+                <input
+                  v-model="editPublisherData.diaChi"
+                  class="form-control rounded-pill"
+                  required
+                />
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary rounded-pill"
+              data-bs-dismiss="modal"
+            >
+              Đóng
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary rounded-pill"
+              @click="saveEditedPublisher"
+            >
+              Lưu
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -38,6 +136,7 @@
       <div class="card-body">
         <form @submit.prevent="addBook" class="row g-3 align-items-center">
           <div class="col-md-3">
+            <label class="form-label">Tên sách</label>
             <input
               v-model="book.tenSach"
               class="form-control rounded-pill"
@@ -46,6 +145,7 @@
             />
           </div>
           <div class="col-md-2">
+            <label class="form-label">Số quyền</label>
             <input
               v-model.number="book.soQuyen"
               type="number"
@@ -55,6 +155,7 @@
             />
           </div>
           <div class="col-md-3">
+            <label class="form-label">Nhà xuất bản</label>
             <select
               v-model="book.maNXB"
               class="form-select rounded-pill"
@@ -66,6 +167,7 @@
             </select>
           </div>
           <div class="col-md-3">
+            <label class="form-label">Tác giả</label>
             <input
               v-model="book.tenTG"
               class="form-control rounded-pill"
@@ -142,7 +244,8 @@
           <tbody>
             <tr v-for="borrow in borrows" :key="borrow._id">
               <td>{{ borrow.idSach.tenSach }}</td>
-              <td>{{ borrow.idDG.ten }}</td>
+              <td>{{ borrow.idDG?.hoLot || "Không xác định" }}</td>
+              <!-- Sửa lỗi -->
               <td>
                 <span
                   :class="
@@ -239,12 +342,14 @@
 import axios from "axios";
 import { Modal } from "bootstrap";
 import Swal from "sweetalert2";
+
 export default {
   data() {
     return {
       publisher: { tenNXB: "", diaChi: "" },
       book: { tenSach: "", soQuyen: 0, maNXB: "", tenTG: "" },
       editBookData: { _id: "", tenSach: "", soQuyen: 0, maNXB: "", tenTG: "" },
+      editPublisherData: { _id: "", tenNXB: "", diaChi: "" },
       publishers: [],
       books: [],
       borrows: [],
@@ -253,48 +358,135 @@ export default {
   },
   methods: {
     async fetchPublishers() {
-      const response = await axios.get(
-        "http://localhost:3000/api/manager/publisher"
-      );
-      this.publishers = response.data.publishers;
-      if (this.publishers.length > 0) this.book.maNXB = this.publishers[0]._id;
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/api/manager/publisher"
+        );
+        this.publishers = response.data.publishers;
+        if (this.publishers.length > 0 && !this.book.maNXB) {
+          this.book.maNXB = this.publishers[0]._id;
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách NXB:", error);
+        Swal.fire("Lỗi", "Không thể tải danh sách nhà xuất bản", "error");
+      }
     },
     async fetchBooks() {
-      const response = await axios.get(
-        "http://localhost:3000/api/manager/book"
-      );
-      console.log(response.data);
-      this.books = response.data.books.map((book) => ({
-        ...book,
-        maNXB: book.maNXB || { tenNXB: "Không có nhà xuất bản" }, // Giá trị mặc định nếu maNXB là null
-      }));
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/api/manager/book"
+        );
+        this.books = response.data.books.map((book) => ({
+          ...book,
+          maNXB: book.maNXB || { tenNXB: "Không có nhà xuất bản" },
+        }));
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách sách:", error);
+        Swal.fire("Lỗi", "Không thể tải danh sách sách", "error");
+      }
     },
     async fetchBorrows() {
-      const response = await axios.get(
-        "http://localhost:3000/api/manager/borrow"
-      );
-      console.log(response.data);
-      this.borrows = response.data.borrowRecords;
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/api/manager/borrow"
+        );
+        this.borrows = response.data.borrowRecords;
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách mượn sách:", error);
+        Swal.fire("Lỗi", "Không thể tải danh sách mượn sách", "error");
+      }
     },
-    async addPublisher() {
-      await axios.post(
-        "http://localhost:3000/api/manager/publisher/add",
-        this.publisher
-      );
-      this.fetchPublishers();
-      this.publisher = { tenNXB: "", diaChi: "" };
-      Swal.fire("Thành công", "Thêm nhà xuất bản thành công", "success");
+    async savePublisher() {
+      try {
+        await axios.post(
+          "http://localhost:3000/api/manager/publisher/add",
+          this.publisher
+        );
+        this.publisher = { tenNXB: "", diaChi: "" };
+        await this.fetchPublishers();
+        Swal.fire("Thành công", "Thêm nhà xuất bản thành công", "success");
+      } catch (error) {
+        console.error("Lỗi khi thêm NXB:", error);
+        Swal.fire("Lỗi", "Không thể thêm nhà xuất bản", "error");
+      }
+    },
+    editPublisher(publisher) {
+      this.editPublisherData = { ...publisher };
+      const modal = new Modal(document.getElementById("editPublisherModal"));
+      modal.show();
+    },
+    async saveEditedPublisher() {
+      try {
+        await axios.put(
+          `http://localhost:3000/api/manager/publisher/${this.editPublisherData._id}`,
+          {
+            tenNXB: this.editPublisherData.tenNXB,
+            diaChi: this.editPublisherData.diaChi,
+          }
+        );
+        await this.fetchPublishers();
+        Swal.fire("Thành công", "Cập nhật nhà xuất bản thành công", "success");
+        const modal = Modal.getInstance(
+          document.getElementById("editPublisherModal")
+        );
+        modal.hide();
+      } catch (error) {
+        console.error("Lỗi khi cập nhật NXB:", error.response || error);
+        Swal.fire(
+          "Lỗi",
+          error.response?.data?.message || "Không thể cập nhật nhà xuất bản",
+          "error"
+        );
+      }
+    },
+    async deletePublisher(id) {
+      if (confirm("Xóa nhà xuất bản này?")) {
+        try {
+          await axios.delete(
+            `http://localhost:3000/api/manager/publisher/${id}`
+          );
+          await this.fetchPublishers();
+          Swal.fire("Thành công", "Xóa nhà xuất bản thành công", "success");
+        } catch (error) {
+          console.error("Lỗi khi xóa NXB:", error);
+          Swal.fire("Lỗi", "Không thể xóa nhà xuất bản", "error");
+        }
+      }
+    },
+    async deleteAllPublishers() {
+      if (confirm("Xóa tất cả nhà xuất bản?")) {
+        try {
+          await axios.delete("http://localhost:3000/api/manager/publisher");
+          await this.fetchPublishers();
+          Swal.fire(
+            "Thành công",
+            "Xóa tất cả nhà xuất bản thành công",
+            "success"
+          );
+        } catch (error) {
+          console.error("Lỗi khi xóa tất cả NXB:", error);
+          Swal.fire("Lỗi", "Không thể xóa tất cả nhà xuất bản", "error");
+        }
+      }
     },
     async addBook() {
-      await axios.post("http://localhost:3000/api/manager/book/add", this.book);
-      this.fetchBooks();
-      this.book = {
-        tenSach: "",
-        soQuyen: 0,
-        maNXB: this.publishers[0]._id,
-        tenTG: "",
-      };
-      Swal.fire("Thành công", "Thêm sách thành công", "success");
+      try {
+        await axios.post(
+          "http://localhost:3000/api/manager/book/add",
+          this.book
+        );
+        this.book = {
+          tenSach: "",
+          soQuyen: 0,
+          maNXB: this.publishers[0]?._id || "",
+          tenTG: "",
+        };
+        await this.fetchBooks();
+        Swal.fire("Thành công", "Thêm sách thành công", "success");
+      } catch (error) {
+        console.error("Lỗi khi thêm sách:", error);
+        Swal.fire("Lỗi", "Không thể thêm sách", "error");
+      }
     },
     editBook(book) {
       this.editBookData = { ...book };
@@ -302,30 +494,45 @@ export default {
       modal.show();
     },
     async saveBook() {
-      await axios.put(
-        `http://localhost:3000/api/manager/book/${this.editBookData._id}`,
-        this.editBookData
-      );
-      this.fetchBooks();
-      Swal.fire("Thành công", "Cập nhật sách thành công", "success");
+      try {
+        await axios.put(
+          `http://localhost:3000/api/manager/book/${this.editBookData._id}`,
+          this.editBookData
+        );
+        await this.fetchBooks();
+        Swal.fire("Thành công", "Cập nhật sách thành công", "success");
+      } catch (error) {
+        console.error("Lỗi khi cập nhật sách:", error);
+        Swal.fire("Lỗi", "Không thể cập nhật sách", "error");
+      }
     },
     async deleteBook(id) {
       if (confirm("Xóa sách này?")) {
-        await axios.delete(`http://localhost:3000/api/manager/book/${id}`);
-        this.fetchBooks();
-        Swal.fire("Thành công", "Xóa sách thành công", "success");
+        try {
+          await axios.delete(`http://localhost:3000/api/manager/book/${id}`);
+          await this.fetchBooks();
+          Swal.fire("Thành công", "Xóa sách thành công", "success");
+        } catch (error) {
+          console.error("Lỗi khi xóa sách:", error);
+          Swal.fire("Lỗi", "Không thể xóa sách", "error");
+        }
       }
     },
     async deleteAllBooks() {
       if (confirm("Xóa tất cả sách?")) {
-        await axios.delete("http://localhost:3000/api/manager/book");
-        this.fetchBooks();
-        Swal.fire("Thành công", "Xóa tất cả sách thành công", "success");
+        try {
+          await axios.delete("http://localhost:3000/api/manager/book");
+          await this.fetchBooks();
+          Swal.fire("Thành công", "Xóa tất cả sách thành công", "success");
+        } catch (error) {
+          console.error("Lỗi khi xóa tất cả sách:", error);
+          Swal.fire("Lỗi", "Không thể xóa tất cả sách", "error");
+        }
       }
     },
     async updateBorrow(idBorrow) {
       try {
-        const response = await axios.patch(
+        await axios.patch(
           `http://localhost:3000/api/manager/borrow/${idBorrow}`,
           {
             trangThai: "Returned",
@@ -334,23 +541,14 @@ export default {
         );
         await this.fetchBorrows();
         await this.fetchBooks();
-        Swal.fire({
-          icon: "success",
-          title: "Thành công",
-          text: "Cập nhật trạng thái thành công",
-        });
+        Swal.fire("Thành công", "Cập nhật trạng thái thành công", "success");
       } catch (error) {
-        console.error(
-          "Lỗi khi cập nhật:",
-          error.response?.data || error.message
+        console.error("Lỗi khi cập nhật mượn sách:", error);
+        Swal.fire(
+          "Lỗi",
+          error.response?.data?.message || "Có lỗi xảy ra",
+          "error"
         );
-        Swal.fire({
-          icon: "error",
-          title: "Lỗi",
-          text:
-            error.response?.data?.message || // Lấy thông báo lỗi từ server
-            "Có lỗi xảy ra khi cập nhật trạng thái",
-        });
       }
     },
   },
@@ -362,6 +560,7 @@ export default {
   },
 };
 </script>
+
 <style scoped>
 .dashboard {
   max-width: 1200px;
@@ -392,6 +591,17 @@ export default {
   border-radius: 15px 15px 0 0;
   font-weight: bold;
   font-size: 1.2rem;
+  padding: 15px;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.form-label {
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 5px;
 }
 
 .form-control,
@@ -455,9 +665,28 @@ export default {
   background-color: #138496;
 }
 
+.btn-secondary {
+  background-color: #6c757d;
+  border: none;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: #0069d9;
+}
+
 .custom-table {
   border-radius: 10px;
   overflow: hidden;
+  margin-bottom: 20px;
 }
 
 .table th,
@@ -476,7 +705,6 @@ export default {
   font-weight: bold;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .row {
     flex-direction: column;
@@ -487,10 +715,14 @@ export default {
   .col-md-3,
   .col-md-5 {
     width: 100%;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
   }
   .btn-custom {
     width: 100%;
+    margin-bottom: 10px;
+  }
+  .text-end {
+    text-align: center !important;
   }
 }
 </style>

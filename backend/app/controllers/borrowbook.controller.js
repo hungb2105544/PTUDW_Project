@@ -92,8 +92,8 @@ exports.borrowBook = async (req, res, next) => {
 exports.getAllBorrowBooks = async (req, res, next) => {
   try {
     const borrowRecords = await BorrowBook.find({})
-      .populate("idSach")
-      .populate("idDG");
+      .populate("idSach", "tenSach")
+      .populate("idDG", "hoLot ten");
 
     if (!borrowRecords.length) {
       return next(new ApiError(404, "No borrow records found"));

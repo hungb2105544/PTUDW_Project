@@ -20,6 +20,11 @@ const readerSchema = new mongoose.Schema({
     required: true,
     enum: ["Nam", "Nu"],
   },
+  password: {
+    type: String,
+    required: true,
+    minlength: 6,
+  },
   diaChi: {
     type: String,
     required: true,
@@ -29,7 +34,7 @@ const readerSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    match: /^0\d{9}$/,
+    match: /^0\d{9}$/, // Định dạng số điện thoại Việt Nam (10 chữ số, bắt đầu bằng 0)
   },
 });
 

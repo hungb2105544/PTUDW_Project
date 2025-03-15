@@ -103,6 +103,21 @@
             </div>
           </div>
 
+          <!-- Mật khẩu -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold">🔒 Mật khẩu</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-lock"></i></span>
+              <input
+                v-model="form.password"
+                type="password"
+                class="form-control"
+                required
+                placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
+              />
+            </div>
+          </div>
+
           <!-- Nút đăng ký -->
           <button type="submit" class="btn btn-success w-100 fw-bold">
             ✅ Đăng ký
@@ -131,6 +146,7 @@ export default {
         gioiTinh: "Nam",
         diaChi: "",
         soDienThoai: "",
+        password: "", // Thêm trường password
       },
       message: "",
       messageClass: "alert-info",
@@ -175,10 +191,12 @@ export default {
   background-color: #f8f9fa;
   border-right: none;
 }
-.form-control {
+.form-control,
+.form-select {
   border-left: none;
 }
-.form-control:focus {
+.form-control:focus,
+.form-select:focus {
   border-color: #28a745;
   box-shadow: 0 0 5px rgba(40, 167, 69, 0.5);
 }

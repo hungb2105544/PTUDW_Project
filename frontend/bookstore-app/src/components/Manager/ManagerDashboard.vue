@@ -231,7 +231,10 @@
     <div class="card shadow-sm">
       <div class="card-header bg-primary text-white">Danh Sách Mượn Sách</div>
       <div class="card-body">
-        <table class="table table-striped table-hover custom-table">
+        <table
+          v-if="borrows.length > 0"
+          class="table table-striped table-hover custom-table"
+        >
           <thead class="table-dark">
             <tr>
               <th>Tên sách</th>
@@ -245,7 +248,6 @@
             <tr v-for="borrow in borrows" :key="borrow._id">
               <td>{{ borrow.idSach.tenSach }}</td>
               <td>{{ borrow.idDG?.hoLot || "Không xác định" }}</td>
-              <!-- Sửa lỗi -->
               <td>
                 <span
                   :class="
@@ -270,6 +272,9 @@
             </tr>
           </tbody>
         </table>
+        <div v-else class="text-center py-4">
+          <p class="text-muted">Không có mượn sách nào hiện tại.</p>
+        </div>
       </div>
     </div>
 
@@ -393,7 +398,6 @@ export default {
         this.borrows = response.data.borrowRecords;
       } catch (error) {
         console.error("Lỗi khi lấy danh sách mượn sách:", error);
-        Swal.fire("Lỗi", "Không thể tải danh sách mượn sách", "error");
       }
     },
     async savePublisher() {

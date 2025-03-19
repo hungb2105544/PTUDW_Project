@@ -15,12 +15,12 @@ const employeeSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minlength: 6, // Tối thiểu 6 ký tự, trong thực tế nên mã hóa
+    minlength: 6,
   },
   chucVu: {
     type: String,
     required: true,
-    enum: ["admin", "staff"], // Giới hạn giá trị hợp lệ
+    enum: ["admin", "staff"],
   },
   diaChi: {
     type: String,
@@ -30,7 +30,7 @@ const employeeSchema = new mongoose.Schema({
   soDienThoai: {
     type: String,
     required: true,
-    match: /^0\d{9}$/, // Định dạng số điện thoại Việt Nam (10 chữ số, bắt đầu bằng 0)
+    match: /^0\d{9}$/,
   },
 });
 

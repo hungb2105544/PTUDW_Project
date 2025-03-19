@@ -61,7 +61,7 @@ exports.deletePublisher = async (req, res, next) => {
       return next(new ApiError(404, "Publisher not found"));
     }
 
-    await publisher.remove();
+    await publisher.deleteOne();
 
     return res.status(200).json({
       message: "Publisher deleted successfully",
